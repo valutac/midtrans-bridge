@@ -6,13 +6,12 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"strings"
 )
 
 func main() {
 	urls := map[string]string{
-		"valutac":   "URL_NOTIFICATION_ONE",
+		"valutac":  "URL_NOTIFICATION_ONE",
 		"valutac2": "URL_NOTIFICATION_TWO",
 	}
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -24,19 +23,22 @@ func main() {
 		}
 		var resp Response
 		if err := json.NewDecoder(r.Body).Decode(&resp); err != nil {
+			log.Printf("Error: %s!\n", err.Error())
 			fmt.Fprintf(w, "Error: %s!\n", err.Error())
 			return
 		}
 		prefix := strings.SplitN(resp.OrderID, "-", 2)[0]
-		switch strings.ToLower(prefix) {
-		case "valutac":
-			fmt.Fprintf(w, "URL: %s!\n", urls["valutac"])
-			send(urls["valutac"], resp)
-		case "valutac2":
-			fmt.Fprintf(w, "URL: %s!\n", urls["valutac2"])
-			send(urls["valutac2"], resp)
-		default:
-			fmt.Fprintf(w, "Unknown Transaction\n")
+		for key, url := range urls {
+			if strings.ToLower(key) != strings.ToLower(prefix) {
+				continue
+			}
+			if err := send(url, resp); err != nil {
+				log.Printf("Callback for %s, sent to %s. Got Err: %s\n", resp.OrderID, url, err.Error())
+				fmt.Fprintf(w, "Callback for %s, sent to %s. Got Err: %s\n", resp.OrderID, url, err.Error())
+				return
+			}
+			log.Printf("Callback for %s, sent to %s\n", resp.OrderID, url)
+			fmt.Fprintf(w, "Callback for %s, sent to %s\n", resp.OrderID, url)
 		}
 	})
 	log.Println("Running HTTP Server on :8080")
@@ -47,10 +49,8 @@ func send(url string, resp Response) error {
 	jsonStr, _ := json.Marshal(resp)
 	_, err := http.Post(url, "application/json", bytes.NewBuffer(jsonStr))
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Callback for %s, sent to %s. Got Err: %s\n", resp.OrderID, url, err.Error())
 		return err
 	}
-	fmt.Fprintf(os.Stdout, "Callback for %s, sent to %s\n", resp.OrderID, url)
 	return nil
 }
 
