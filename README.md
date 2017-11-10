@@ -22,6 +22,7 @@ Any transaction which has `VALUTAC` prefix on order id will be forwarded into
     * Use GOOS or GOARCH to build cross platform, Ex: `GOOS=linux go build`
 * Copy binary file into your deployment machine
 * Create a new service file, Ex: `/etc/systemd/system/midtrans.service`:
+
     ```
     [Unit]
     Description=Midtrans Bridge
@@ -35,14 +36,17 @@ Any transaction which has `VALUTAC` prefix on order id will be forwarded into
     WantedBy=multi-user.target
     ```
 * Re-read systemd configuration
+
     ```sh
     $ sudo systemctl daemon-reload
     ```
 * Start the service. The Application will be running on port :8080
+
     ```sh
     $ sudo systemctl start midtrans
     ```
 * Proxy Reverse with Nginx
+
     ```
     upstream midtrans {
         server 127.0.0.1:8080;
@@ -63,5 +67,12 @@ Any transaction which has `VALUTAC` prefix on order id will be forwarded into
         }
     }
     ```
+
 * Make sure to set Notification URL into midtrans with the right path,
-    "http://yourdeploymentdomain.com/".
+    "http://yourdeploymentdomain.com/"
+
+## LICENSE
+
+<a href="LICENSE">
+<img src="https://raw.githubusercontent.com/valutac/accent/master/mit.png" width="75"></img>
+</a>
