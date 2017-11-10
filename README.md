@@ -29,6 +29,7 @@ Any transaction which has `VALUTAC` prefix on order id will be forwarded into
     After=syslog.target
 
     [Service]
+    Environment=DEFAULT_URL=https://defaultcallback.com
     User=root
     ExecStart=/path/to/binary SuccessExitStatus=143
 

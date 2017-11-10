@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 )
+
+var defaultURL = os.Getenv("DEFAULT_URL")
 
 func main() {
 	urls := map[string]string{
@@ -28,6 +31,7 @@ func main() {
 			return
 		}
 		prefix := strings.SplitN(resp.OrderID, "-", 2)[0]
+		var found bool
 		for key, url := range urls {
 			if strings.ToLower(key) != strings.ToLower(prefix) {
 				continue
@@ -39,6 +43,16 @@ func main() {
 			}
 			log.Printf("Callback for %s, sent to %s\n", resp.OrderID, url)
 			fmt.Fprintf(w, "Callback for %s, sent to %s\n", resp.OrderID, url)
+			found = true
+		}
+		if !found && defaultURL != "" {
+			if err := send(defaultURL, resp); err != nil {
+				log.Printf("Callback for %s, sent to %s. Got Err: %s\n", resp.OrderID, defaultURL, err.Error())
+				fmt.Fprintf(w, "Callback for %s, sent to %s. Got Err: %s\n", resp.OrderID, defaultURL, err.Error())
+				return
+			}
+			log.Printf("Callback for %s, sent to %s\n", resp.OrderID, defaultURL)
+			fmt.Fprintf(w, "Callback for %s, sent to %s\n", resp.OrderID, defaultURL)
 		}
 	})
 	log.Println("Running HTTP Server on :8080")
